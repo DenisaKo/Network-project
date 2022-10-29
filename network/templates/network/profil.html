@@ -1,0 +1,215 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page">
+    <div class="user_profile" id="{{ user_id }}">
+        {% if user.is_authenticated %}
+            <div class="card profil_card shadow mb-3" style="max-width: 700px;">
+                <div class="row g-0">
+                    <div class="col-md-4" >
+                        <div id="user_image">
+                            {% if profil.image %}
+                                <img class="img-fluid rounded-start rounded-circle" src="{{profil.image}}">
+                            {% else %}
+                                <img class="img-fluid rounded-start rounded-circle" src="https://robohash.org/{{ user_id }}?200x200">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title" id="user_name" style="white-space: nowrap">{{ user_username }}</h5>
+                            <p class="card-text" id="user_bio">{{ profil.bio }}</p>
+
+                            <div class="row profil">
+                                <div class="col-5 ">Following:</div>
+                                <div class="col-1" id="following">{{ following_count }}</div>
+                                
+                                <div class="col-5">Followers:</div>
+                                <div class="col-1" id="followers">{{ followers_count }}</div>    
+                            </div>
+                            <div class="row profil" id="follow">
+                                    <form id="create_delete_follow">
+                                        {% if user.id != user_id %}
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary btn-sm edit_button" id="follow_button" data-status="{{status}}"><div id="status_disp">{{status}}</div></button>
+                                        {% endif %}
+                                    </form> 
+                                {% if user.is_authenticated %}
+                                    {% if user.id == user_id %}
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#profileModal" data-bs-whatever="{{ user_id }}">Edit protile</button>
+                                    {% endif %}
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Profile edititng ...</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="edit_post_form">
+                                <div class="mb-3">
+                                    <label for="image_url" class="col-form-label">Enter URL for your picture (if left empty, image will be a robot by default)</label>
+                                    <input type="url" class="form-control" id="image_url">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bio-text" class="col-form-label">Place enter your new bio</label>
+                                    <textarea class="form-control" id="bio-text"></textarea>
+                                </div>
+                            
+                        </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary" id="update_profile" data-bs-dismiss="modal">Update profil</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        {% endif %}
+    </div>
+
+    <div id="container_posts" data-person="{{ user.id }}">
+        {% for item in page_obj %}
+        <div class="post_item card shadow">
+            <div class="card-header">
+                <div><a href="{% url 'user_detail_profil' item.sender %}">{{item.sender_name}}</a></div>  
+                {% if user.id == item.sender %}
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="{{item.id}}">Edit</button>
+                {% endif %}
+            </div>
+            <div class="card-body">    
+                <div><small>{{item.timestamp}}</small></div>
+                <div id="body{{item.id}}">{{item.body_text}}</div>
+                <hr>
+                <div class="like_comments">
+    
+                    <div class="like_btn_comment_name">
+                        <div class="like_button">
+                            <form id="{{item.id}}" class="form_add_like" >
+                                {% csrf_token %}
+                                <button id="" class="btn btn-outline-info" type="submit" data-person_id="{{item.sender}}" data-post_id="{{item.id}}"><i class="bi bi-hand-thumbs-up"></i></button>
+                            </form>
+                            <div id="count{{item.id}}">{{item.likes_count}}</div>
+                            <div>&nbsp likes</div> 
+                        </div>
+    
+                        <div class="comments_name" data-post_id="{{item.id}}">
+                            <button type="button" class="btn btn-outline-info">Comments</button>
+                        </div>
+                    </div>
+    
+                    <div class="comments_section" id="comments_section{{item.id}}">
+                        
+                        <div class="card comment_card shadow">
+                            <div class="card-header">
+                                <div>Add comment</div>
+                            </div>
+                            <div class="card-body form">
+                                <form id="new_comment{{item.id}}" class="card-body new_post">
+                                    {% if profil.image %}
+                                        <img class="img_add_post comm_img"src="{{profil.image}}" alt="">
+                                    {% else %}
+                                        <img class="img_add_post"src="https://robohash.org/{{user.id}}?200x200" alt="">
+                                    {% endif %}
+                                    
+                                    <textarea id="new_comment_text{{item.id}}" placeholder="Your comment here ..."></textarea>
+                                    <!-- <input type="submit" value="Send"> -->
+                                    <button type="submit" class="btn btn-outline-info">Send</button>
+                                </form>
+                             </div>
+                        </div>
+                        <br>
+                        
+                        <div class="comments_all" id="comments_all{{item.id}}">
+                            {% for comment in item.comments %}
+                            <div class="card comment_card shadow comments">
+                                
+                                    <div class="card-header">
+                                        <div><a href="{% url 'user_detail_profil' comment.sender %}">{{ comment.sender_name }}</a></div>
+                                        <div><small>{{ comment.timestamp }}</small></div>
+                                    </div>
+    
+                                    <div class="card-body"> 
+                                        <div>{{ comment.body_text }}</div>
+                                    </div>
+                            
+                                
+                            </div>
+                            <br>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <hr class="hr_bottom">
+            </div>
+        </div>
+        
+        {% endfor %}
+    </div>
+</div>
+<div class="pagination justify-content-center">
+<span class="step-links">
+    {% if page_obj.has_previous %}
+        <a href="?page=1">&laquo; first</a>
+        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+    {% endif %}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+    {% endif %}
+</span>
+</div>
+
+{% if user.is_authenticated %}
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Editing your post...</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form id="edit" >
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="message-text" class="col-form-label">What did you realy think?:</label>
+                <textarea class="form-control" id="message-text" name=""></textarea>
+            </div>
+            
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Send message</button>
+            </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+    
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'network/following.js' %}"></script>
+    <script src="{% static 'network/index.js' %}"></script>
+    <script src="{% static 'network/profil.js' %}"></script>
+
+{% endblock %}
+

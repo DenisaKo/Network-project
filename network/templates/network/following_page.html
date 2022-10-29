@@ -1,0 +1,105 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+<div class="page">
+    <div id="container_posts" data-person="{{ user.id }}">
+        {% for item in page_obj %}
+        <div class="post_item card shadow">
+            <div class="card-header">
+                <div><a href="{% url 'user_detail_profil' item.sender %}">{{item.sender_name}}</a></div>  
+            </div>
+            <div class="card-body">    
+                <div><small>{{item.timestamp}}</small></div>
+                <div>{{item.body_text}}</div>
+                <hr>
+                <div class="like_comments">
+
+                    <div class="like_btn_comment_name">
+                        <div class="like_button">
+                            <form id="{{item.id}}" class="form_add_like" >
+                                {% csrf_token %}
+                                <button id="" class="btn btn-outline-info" type="submit" data-person_id="{{item.sender}}" data-post_id="{{item.id}}"><i class="bi bi-hand-thumbs-up"></i></button>
+                            </form>
+                            <div id="count{{item.id}}">{{item.likes_count}}</div>
+                            <div>&nbsp likes</div> 
+                        </div>
+
+                        <div class="comments_name" data-post_id="{{item.id}}">
+                            <button type="button" class="btn btn-outline-info">Comments</button>
+                        </div>
+                    </div>
+
+                    <div class="comments_section" id="comments_section{{item.id}}">
+                        
+                        <div class="card comment_card shadow">
+                            <div class="card-header">
+                                <div>Add comment</div>
+                            </div>
+                            <div class="card-body form">
+                                <form id="new_comment{{item.id}}" class="card-body new_post">
+                                    {% if img %}
+                                        <img class="img_add_post comm_img"src="{{img}}" alt="">
+                                    {% else %}
+                                        <img class="img_add_post"src="https://robohash.org/{{user.id}}?200x200" alt="">
+                                    {% endif %}
+                                    
+                                    <textarea id="new_comment_text{{item.id}}" placeholder="Your comment here ..."></textarea>
+                                    <!-- <input type="submit" value="Send"> -->
+                                    <button type="submit" class="btn btn-outline-info">Send</button>
+                                </form>
+                            </div>
+                        </div>
+                        <br>
+                        
+                        <div class="comments_all" id="comments_all{{item.id}}">
+                            {% for comment in item.comments %}
+                            <div class="card comment_card shadow comments">
+                                
+                                    <div class="card-header">
+                                        <div><a href="{% url 'user_detail_profil' comment.sender %}">{{ comment.sender_name }}</a></div>
+                                        <div><small>{{ comment.timestamp }}</small></div>
+                                    </div>
+
+                                    <div class="card-body"> 
+                                        <div>{{ comment.body_text }}</div>
+                                    </div>
+                            
+                                
+                            </div>
+                            <br>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <hr class="hr_bottom">
+            </div>
+        </div>
+        
+        {% endfor %}
+    </div>
+</div>
+<div class="pagination justify-content-center">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <!-- <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span> -->
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+        
+
+{% endblock %}
+{% block script %}
+    <script src="{% static 'network/following.js' %}"></script>
+{% endblock %}
